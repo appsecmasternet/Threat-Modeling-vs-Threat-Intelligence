@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Threat Intelligence vs Threat Modeling in Practice</title>
+  <meta name="description" content="Threat intelligence vs threat modeling explained through one customer portal: how each works, where they differ and how to combine them to prioritize fixes.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "What is the difference between threat intelligence and threat modeling?", "acceptedAnswer": {"@type": "Answer", "text": "Threat intelligence gathers and analyzes information about real adversaries and their techniques from outside your organization. Threat modeling examines your own system's design to find where those or other threats could succeed. One describes the attacker; the other describes your exposure."}},
+      {"@type": "Question", "name": "Should threat modeling happen before or after reviewing intelligence?", "acceptedAnswer": {"@type": "Answer", "text": "Either order works, but starting with modeling gives you a map of your assets, which makes intelligence easier to filter. Afterward, intelligence helps you rank the modeled threats by how actively attackers pursue them."}},
+      {"@type": "Question", "name": "How does MITRE ATT&CK help with threat modeling?", "acceptedAnswer": {"@type": "Answer", "text": "MITRE ATT&CK provides a catalog of real attacker techniques. Modelers can use it as a checklist of realistic abuse cases, while analysts use the same catalog to design detections. It complements methods like STRIDE rather than replacing them."}},
+      {"@type": "Question", "name": "Do I need paid threat intelligence feeds?", "acceptedAnswer": {"@type": "Answer", "text": "Not necessarily. Many teams start with free sources, vendor advisories and information sharing communities. Paid feeds can add depth, but their value depends on whether your team can act on the data."}},
+      {"@type": "Question", "name": "How often should a threat model be updated?", "acceptedAnswer": {"@type": "Answer", "text": "Update it whenever the architecture, data flows, or third party integrations change significantly and review it periodically even without changes. New intelligence about a relevant technique is another good trigger."}}
+    ]
+  }
+  </script>
+</head>
+<body>
+<article>
+  <h1>Threat Intelligence Compared to Threat Modeling in Practice</h1>
+
+  <div class="quick-answer">
+    <p><strong>Threat intelligence vs threat modeling comes down to direction.</strong> Intelligence looks outside at attacker behavior and tells you what is being used right now. Modeling looks inside at your architecture and tells you where those behaviors could succeed. Use intelligence to learn what attackers do, use modeling to learn where you are exposed and combine the results to decide what to fix first.</p>
+  </div>
+
+  <p>Definitions are easy to find, but the real confusion appears when a team has to decide which activity to run on a Monday morning. Instead of repeating glossary entries, this guide follows one imaginary web application through both processes. If you want the definitions side first, the dedicated <a href="#TODO-threat-modeling-vs-threat-intelligence">threat modeling vs threat intelligence</a> article covers them in more detail.</p>
+
+  <h2>The Scenario: A Customer Portal With Login, Uploads and an API</h2>
+  <p>Imagine a company running a customer portal. Users sign in, upload documents and call a REST API from a mobile app. Behind it sits a database, an object store for files and a third party email service. This is a realistic target and it gives us concrete material to compare the two disciplines.</p>
+
+  <h2>Step 1: Start With Threat Modeling to Map What You Own</h2>
+  <p>Cybersecurity threat modeling begins with a data flow diagram: browser, API gateway, application server, database, file store and email provider, with trust boundaries drawn where data crosses between them. Walking through each element with STRIDE threat modeling produces findings like these:</p>
+  <ul>
+    <li><strong>Spoofing:</strong> can someone impersonate a user at the login form or reuse a stolen session token?</li>
+    <li><strong>Tampering:</strong> can an uploaded file or an API parameter alter data it should not touch?</li>
+    <li><strong>Information disclosure:</strong> can one customer read another customer's documents by changing an identifier?</li>
+    <li><strong>Denial of service:</strong> can a large upload exhaust storage or processing?</li>
+    <li><strong>Elevation of privilege:</strong> can a normal user reach an administrative function?</li>
+  </ul>
+  <p>The output is a ranked list of design-level threats and planned controls. Notice that nothing here required knowing who the attackers are. Teams that want a deeper walkthrough of this session format can read the <a href="#TODO-threat-modeling-practice">threat modeling practice</a> article, which covers diagrams and facilitation tips.</p>
+
+  <h2>Step 2: Bring In Intelligence to Learn What Attackers Actually Do</h2>
+  <p>Now imagine the security analyst reviews cyber threat intelligence relevant to portals like this one. Sector reports might show that credential stuffing and session hijacking are common and that attackers frequently abuse insecure direct object references in APIs. Mapping those behaviors to MITRE ATT&amp;CK techniques gives the team shared names for them, such as valid account abuse and exploitation of public facing applications.</p>
+  <p>Threat intelligence feeds add technical indicators, such as addresses associated with automated login attacks. The SOC can load these into detection rules. Yet an indicator alone expires quickly, because attackers rotate infrastructure. The durable value lies in the behavior: knowing the pattern lets you detect it even when the addresses change.</p>
+
+  <h2>Step 3: Turn the Combined View Into a Security Risk Assessment</h2>
+  <p>A security risk assessment combines likelihood, impact and existing controls. Modeling supplies the impact and the exposure, while intelligence supplies evidence about likelihood. In our portal, cross-customer document access has a high impact because of data sensitivity. Intelligence suggests attackers actively probe for it, so likelihood is high too. That pair moves it to the top of the backlog.</p>
+  <p>Threat assessment and threat analysis follow naturally from this. Analysis explains how the attack would unfold step by step and assessment ranks it against other issues. Neither requires a perfect score; a consistent scale such as high, medium and low, applied the same way every time, is enough to drive decisions.</p>
+
+  <h2>Step 4: Verify Through Testing and Detection</h2>
+  <p>Planned mitigations should be tested, not assumed. Practicing attacks yourself is the best way to learn whether a control holds up. Working through <a href="#TODO-web-security-ctf-labs">web security CTF labs</a> lets you try broken access control and session attacks against intentionally vulnerable targets, which builds the intuition needed to judge mitigations realistically.</p>
+  <p>Verification also includes reading the implementation. A diagram may say ownership is checked, while the code may check it in only one of three endpoints. Auditing exercises such as the <a href="#TODO-source-code-review-labs">source code review labs</a> train this habit and threat detection rules should then be written to catch the same abuse in production logs.</p>
+
+  <h2>Common Mistakes When Comparing the Two</h2>
+  <ul>
+    <li><strong>Treating feeds as a strategy.</strong> Subscribing to feeds without a process for triage creates noise, not security.</li>
+    <li><strong>Modeling once and never again.</strong> A model goes stale when the architecture changes, so revisit it when features, vendors, or data flows change.</li>
+    <li><strong>Ignoring relevance.</strong> Intelligence about a threat that does not apply to your stack is a distraction. Filter by your technology and industry.</li>
+    <li><strong>Keeping the teams apart.</strong> Developers and analysts should share findings, since each holds half of the picture.</li>
+    <li><strong>Skipping documentation.</strong> Findings that are not written down are hard to reuse. Clear notes, like those in a good <a href="#TODO-ctf-writeup">CTF writeup</a>, make results repeatable for the next person.</li>
+  </ul>
+
+  <h2>When Each Approach Is the Better Starting Point</h2>
+  <p>Choose modeling first when you are designing something new, changing a trust boundary, or onboarding a new third party service, because no incident data exists yet and the design is still cheap to change. Choose intelligence first when you already operate a mature system and need to understand which of its many known weaknesses attackers are actively pursuing. In both cases, the other discipline follows quickly, since each one produces questions that only the other can answer.</p>
+
+  <h2>A Simple Cadence to Adopt</h2>
+  <p>You do not need a large program to benefit. A workable rhythm is to model every significant feature before release, review relevant intelligence monthly and update the model whenever intelligence shows a technique your design does not handle. Over time this creates a feedback loop in which each discipline improves the other. For continued practice material across web security topics, the <a href="#TODO-challenges">challenges library</a> offers exercises you can fit into that rhythm.</p>
+
+  <h2>Conclusion</h2>
+  <p>Comparing threat intelligence to threat modeling is most useful when you treat them as partners with different vantage points. Modeling tells you where your system is weak, intelligence tells you which weaknesses attackers are exploiting and a security risk assessment joins the two into clear priorities. Start small, repeat the cycle and keep practicing offensive and defensive skills. You can find more training and resources at <a href="#TODO-home">AppSecMaster</a>.</p>
+
+  <section class="faq">
+    <h2>Frequently Asked Questions (FAQs)</h2>
+
+    <h3>What is the difference between threat intelligence and threat modeling?</h3>
+    <p>Threat intelligence gathers and analyzes information about real adversaries and their techniques from outside your organization. Threat modeling examines your own system's design to find where those or other threats could succeed. One describes the attacker; the other describes your exposure.</p>
+
+    <h3>Should threat modeling happen before or after reviewing intelligence?</h3>
+    <p>Either order works, but starting with modeling gives you a map of your assets, which makes intelligence easier to filter. Afterward, intelligence helps you rank the modeled threats by how actively attackers pursue them.</p>
+
+    <h3>How does MITRE ATT&amp;CK help with threat modeling?</h3>
+    <p>MITRE ATT&amp;CK provides a catalog of real attacker techniques. Modelers can use it as a checklist of realistic abuse cases, while analysts use the same catalog to design detections. It complements methods like STRIDE rather than replacing them.</p>
+
+    <h3>Do I need paid threat intelligence feeds?</h3>
+    <p>Not necessarily. Many teams start with free sources, vendor advisories and information sharing communities. Paid feeds can add depth, but their value depends on whether your team can act on the data.</p>
+
+    <h3>How often should a threat model be updated?</h3>
+    <p>Update it whenever the architecture, data flows, or third party integrations change significantly and review it periodically even without changes. New intelligence about a relevant technique is another good trigger.</p>
+  </section>
+</article>
+</body>
+</html>
